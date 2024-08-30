@@ -1,0 +1,45 @@
+require("dotenv").config();
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+const http = require('http');
+const express  = require('express');
+const { Server } = require('socket.io');
+const cors = require("cors");
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+const app = express()
+app.use(cors());
+const server = http.createServer(app)
+const io = new Server(server, {
+    cors:{
+        // origin: process.env.CORS_URL,
+        origin: 'http://localhost:3000',
+        methods: ["GET", "POST"],
+        credentials: true
+    }
+});
+
+io.on('connection', (socket) => {
+    socket.on("send_message", async(input) => {
+
+        const model = genAI.getGenerativeModel({model: "gemini-large"});
+        const result = await model.generateContent(input);
+        const response = await result.response;
+        const text = response.text()
+        console.log(text)
+        socket.emit("receive_message", text);
+    })
+});
+const PORT = process.env.PORT || 5000;
+
+// console.log(PORT)
+
+server.listen(PORT, () => console.log("Server is Running", PORT));
+
+
+<div className='response-message'>
+                            <p>Hi, I am AgroAI. How may I help you?</p>
+                        </div>
+                        <div className='response-message other'>
+                            <p>Hi, I am AgroAI. How may I help you?</p>
+                        </div>
